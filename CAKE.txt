@@ -1,0 +1,155 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+public class CakeOrder
+{
+    private string shape;
+    private string size;
+    private string flavor;
+    private int quantity;
+    private string glaze;
+    private string decor;
+
+    public void StartOrder()
+    {
+        Console.WriteLine("Welcome to our cake shop!");
+        Console.WriteLine("Please make your cake order.");
+
+        // Select cake options
+        shape = ShowMenu("Select cake shape", new List<MenuItem> { new MenuItem("Round", 10), new MenuItem("Square", 12), new MenuItem("Heart", 15) });
+        size = ShowMenu("Select cake size", new List<MenuItem> { new MenuItem("Small", 20), new MenuItem("Medium", 25), new MenuItem("Large", 30) });
+        flavor = ShowMenu("Select cake flavor", new List<MenuItem> { new MenuItem("Chocolate", 5), new MenuItem("Vanilla", 4), new MenuItem("Strawberry", 6) });
+        quantity = GetNumericInput("Enter quantity");
+        glaze = ShowMenu("Select cake glaze", new List<MenuItem> { new MenuItem("Chocolate", 3), new MenuItem("Vanilla", 2), new MenuItem("Strawberry", 2) });
+        decor = ShowMenu("Select cake decor", new List<MenuItem> { new MenuItem("Sprinkles", 1), new MenuItem("Fruits", 2), new MenuItem("Candles", 1) });
+
+        // Calculate and display order summary
+        decimal totalPrice = CalculateTotalPrice();
+        Console.WriteLine("\nOrder Summary:");
+        Console.WriteLine("---------------");
+        Console.WriteLine($"Shape: {shape}");
+        Console.WriteLine($"Size: {size}");
+        Console.WriteLine($"Flavor: {flavor}");
+        Console.WriteLine($"Quantity: {quantity}");
+        Console.WriteLine($"Glaze: {glaze}");
+        Console.WriteLine($"Decor: {decor}");
+        Console.WriteLine($"Total Price: {totalPrice}");
+
+        // Save order to file
+        SaveOrder(totalPrice);
+
+        // Check if user wants to place another order
+        Console.Write("\nEnter 'Y' to place another order, or any other key to exit: ");
+        string choice = Console.ReadLine();
+        if (choice.ToUpper() == "Y")
+        {
+            Console.WriteLine();
+            StartOrder();
+        }
+        else
+        {
+            Console.WriteLine("Thank you for using our cake ordering system. Goodbye!");
+        }
+    }
+
+    private string ShowMenu(string heading, List<MenuItem> menuItems)
+    {
+        Console.WriteLine($"\n{heading}:");
+        Console.WriteLine("---------------");
+
+        int selectedIndex = 0;
+        ConsoleKeyInfo keyInfo;
+        do
+        {
+            for (int i = 0; i < menuItems.Count; i++)
+            {
+                Console.WriteLine($"{(i == selectedIndex ? ">> " : "   ")}{menuItems[i].Description} (${menuItems[i].Price})");
+            }
+
+            keyInfo = Console.ReadKey();
+            if (keyInfo.Key == ConsoleKey.UpArrow)
+            {
+                selectedIndex = (selectedIndex == 0) ? menuItems.Count - 1 : selectedIndex - 1;
+            }
+            else if (keyInfo.Key == ConsoleKey.DownArrow)
+            {
+                selectedIndex = (selectedIndex == menuItems.Count - 1) ? 0 : selectedIndex + 1;
+            }
+
+            Console.SetCursorPosition(0, Console.CursorTop - menuItems.Count);
+        } while (keyInfo.Key != ConsoleKey.Enter);
+
+        return menuItems[selectedIndex].Description;
+    }
+
+    private int GetNumericInput(string prompt)
+    {
+        bool isValid = false;
+        int value = 0;
+
+        while (!isValid)
+        {
+            Console.Write($"{prompt}: ");
+            isValid = int.TryParse(Console.ReadLine(), out value);
+
+            if (!isValid)
+            {
+                Console.WriteLine("Invalid input. Please enter a numeric value.");
+            }
+        }
+
+        return value;
+    }
+
+    private decimal CalculateTotalPrice()
+    {
+        decimal shapePrice = GetPrice(shape);
+        decimal sizePrice = GetPrice(size);
+        decimal flavorPrice = GetPrice(flavor);
+        decimal glazePrice = GetPrice(glaze);
+        decimal decorPrice = GetPrice(decor);
+
+        decimal totalPrice = (shapePrice + sizePrice + flavorPrice + glazePrice + decorPrice) * quantity;
+        return totalPrice;
+    }
+
+    private decimal GetPrice(string item)
+    {
+        // Implement your logic to get the price of the item
+        // This is just a placeholder method
+        return 0;
+    }
+
+    private void SaveOrder(decimal totalPrice)
+    {
+        string orderDetails = $"{shape}, {size}, {flavor}, {quantity}, {glaze}, {decor}";
+
+        // Save order details to file
+        using (StreamWriter writer = new StreamWriter("orders.txt", true))
+        {
+            writer.WriteLine($"{orderDetails} - Total Price: {totalPrice}");
+        }
+    }
+
+    private class MenuItem
+    {
+        public string Description { get; set; }
+        public decimal Price { get; set; }
+
+        public MenuItem(string description, decimal price)
+        {
+            Description = description;
+            Price = price;
+        }
+    }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        CakeOrder cakeOrder = new CakeOrder();
+        cakeOrder.StartOrder();
+    }
+}
