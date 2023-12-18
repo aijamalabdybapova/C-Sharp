@@ -1,0 +1,135 @@
+using System;
+using System.IO;
+
+public static class FileExplorer
+{
+    public static void Start()
+    {
+        DriveInfo[] drives = DriveInfo.GetDrives();
+
+        Console.WriteLine("Выберите диск:");
+
+        for (int i = 0; i < drives.Length; i++)
+        {
+            Console.WriteLine($"{i + 1}. {drives[i].Name}");
+        }
+
+        int selectedDriveIndex = GetMenuChoice(drives.Length);
+
+        DriveInfo selectedDrive = drives[selectedDriveIndex - 1];
+
+        Console.WriteLine($"Информация о диске: {selectedDrive.Name}");
+        Console.WriteLine($"Общий размер: {GetSizeInGB(selectedDrive.TotalSize)}");
+        Console.WriteLine($"Свободное место: {GetSizeInGB(selectedDrive.TotalFreeSpace)}");
+        Console.WriteLine($"Занято: {GetSizeInGB(selectedDrive.TotalSize - selectedDrive.TotalFreeSpace)}");
+
+        ShowDirectoryInformation(selectedDrive.RootDirectory);
+    }
+
+    public static void ShowDirectoryInformation(DirectoryInfo directory)
+    {
+        Console.Clear();
+
+        Console.WriteLine($"Текущая папка: {directory.FullName}");
+
+        DirectoryInfo[] subdirectories = directory.GetDirectories();
+        FileInfo[] files = directory.GetFiles();
+
+        Console.WriteLine("Подпапки:");
+        for (int i = 0; i < subdirectories.Length; i++)
+        {
+            Console.WriteLine($"{i + 1}. {subdirectories[i].Name}");
+        }
+
+        Console.WriteLine("\nФайлы:");
+        for (int i = 0; i < files.Length; i++)
+        {
+            Console.WriteLine($"{i + 1}. {files[i].Name}");
+        }
+
+        int selectedOption = GetMenuChoice(subdirectories.Length + files.Length);
+        int selectedDirectoryIndex = selectedOption - 1;
+
+        if (selectedDirectoryIndex < subdirectories.Length)
+        {
+            ShowDirectoryInformation(subdirectories[selectedDirectoryIndex]);
+        }
+        else
+        {
+            FileInfo selectedFile = files[selectedDirectoryIndex - subdirectories.Length];
+            OpenFile(selectedFile.FullName);
+        }
+    }
+
+    public static int GetMenuChoice(int totalOptions)
+    {
+        int choice = 0;
+
+        while (choice < 1 || choice > totalOptions)
+        {
+            Console.Write("Выберите пункт меню: ");
+            int.TryParse(Console.ReadLine(), out choice);
+        }
+
+        return choice;
+    }
+
+    public static void OpenFile(string filePath)
+    {
+        string extension = Path.GetExtension(filePath.ToLower());
+
+        switch (extension)
+        {
+            case ".txt":
+                Console.WriteLine("Открытие файла через блокнот");
+                break;
+            case ".docx":
+                Console.WriteLine("Открытие файла через Word");
+                break;
+            // Add additional file extensions and their associated programs to open
+            default:
+                Console.WriteLine("Невозможно открыть файл");
+                break;
+        }
+    }
+
+    public static string GetSizeInGB(long sizeInBytes)
+    {
+        double sizeInGB = sizeInBytes / Math.Pow(1024, 3);
+        return $"{sizeInGB:F2} ГБ";
+    }
+}
+
+public static class ArrowKeys
+{
+    public static ConsoleKeyInfo GetArrowInput()
+    {
+        ConsoleKeyInfo keyInfo = Console.ReadKey();
+
+        while (keyInfo.Key != ConsoleKey.UpArrow && keyInfo.Key != ConsoleKey.DownArrow
+               && keyInfo.Key != ConsoleKey.LeftArrow && keyInfo.Key != ConsoleKey.RightArrow)
+        {
+            keyInfo = Console.ReadKey();
+        }
+
+        return keyInfo;
+    }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        FileExplorer.Start();
+
+        while (true)
+        {
+            ConsoleKeyInfo arrowKey = ArrowKeys.GetArrowInput();
+
+            if (arrowKey.Key == ConsoleKey.Escape)
+            {
+                FileExplorer.Start();
+            }
+        }
+    }
+}
